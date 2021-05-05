@@ -1,6 +1,7 @@
 catalyst==20.6
 colorednoise==1.1.1
 efficientnet-pytorch==0.6.3
+resnest==0.0.5
 iterative-stratification==0.1.6
 librosa==0.7.2
 numpy==1.19.0

@@ -32,6 +32,8 @@ from efficientnet_pytorch import EfficientNet
 from torchlibrosa.stft import Spectrogram, LogmelFilterBank
 from torchlibrosa.augmentation import SpecAugmentation
 
+import resnest
+
 
 def init_layer(layer):
     nn.init.xavier_uniform_(layer.weight)
@@ -394,15 +396,13 @@ class PANNsCNN14Att(nn.Module):
 
         return output_dict
 
-
 class ResNestSED(nn.Module):
     def __init__(self, base_model_name: str, pretrained=False,
                  num_classes=264):
         super().__init__()
         self.interpolate_ratio = 30  # Downsampled ratio
-        base_model = torch.hub.load("zhanghang1989/ResNeSt",
-                                    base_model_name,
-                                    pretrained=pretrained)
+        # base_model = globals()[base_model_name](pretrained=pretrained)
+        base_model = getattr(resnest.torch, base_model_name)(pretrained=pretrained)
         layers = list(base_model.children())[:-2]
         self.encoder = nn.Sequential(*layers)
 
