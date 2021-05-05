@@ -32,7 +32,7 @@ from efficientnet_pytorch import EfficientNet
 from torchlibrosa.stft import Spectrogram, LogmelFilterBank
 from torchlibrosa.augmentation import SpecAugmentation
 
-import resnest
+from resnest import torch as resnest_torch
 
 
 def init_layer(layer):
@@ -402,7 +402,7 @@ class ResNestSED(nn.Module):
         super().__init__()
         self.interpolate_ratio = 30  # Downsampled ratio
         # base_model = globals()[base_model_name](pretrained=pretrained)
-        base_model = getattr(resnest.torch, base_model_name)(pretrained=pretrained)
+        base_model = getattr(resnest_torch, base_model_name)(pretrained=pretrained)
         layers = list(base_model.children())[:-2]
         self.encoder = nn.Sequential(*layers)
 
