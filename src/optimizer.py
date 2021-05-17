@@ -339,3 +339,50 @@ def get_cosine_with_hard_restarts_schedule_with_warmup(
         return max(0.0, 0.5 * (1.0 + math.cos(math.pi * ((float(num_cycles) * progress) % 1.0))))
 
     return LambdaLR(optimizer, lr_lambda, last_epoch)
+
+class CosineAnnealingWarmRestarts_custom(torch.optim.lr_scheduler.CosineAnnealingWarmRestarts):
+    def __init__(self, optimizer, T_0, T_mult=1, eta_min=0, last_epoch=-1, verbose=False):
+        super(CosineAnnealingWarmRestarts_custom, self).__init__(optimizer, T_0, T_mult, eta_min, last_epoch)
+
+    def step(self, epoch=None):
+        if epoch is None and self.last_epoch < 0:
+            epoch = 0
+
+        if epoch is None:
+            epoch = self.last_epoch + 1
+            self.T_cur = self.T_cur + 1
+            if epoch >= self.T_0:
+                self.T_cur = self.T_i
+            elif self.T_cur >= self.T_i:
+                self.T_cur = self.T_cur - self.T_i
+                self.T_i = self.T_i * self.T_mult
+        else:
+            if epoch < 0:
+                raise ValueError("Expected non-negative epoch, but got {}".format(epoch))
+            if epoch >= self.T_0:
+                self.T_cur = self.T_i
+            else:
+                self.T_i = self.T_0
+                self.T_cur = epoch
+        self.last_epoch = math.floor(epoch)
+
+        class _enable_get_lr_call:
+
+            def __init__(self, o):
+                self.o = o
+
+            def __enter__(self):
+                self.o._get_lr_called_within_step = True
+                return self
+
+            def __exit__(self, type, value, traceback):
+                self.o._get_lr_called_within_step = False
+                return self
+
+        with _enable_get_lr_call(self):
+            for i, data in enumerate(zip(self.optimizer.param_groups, self.get_lr())):
+                param_group, lr = data
+                param_group['lr'] = lr
+                self.print_lr(self.verbose, i, lr, epoch)
+
+        self._last_lr = [group['lr'] for group in self.optimizer.param_groups]
