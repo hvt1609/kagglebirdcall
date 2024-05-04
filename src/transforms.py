@@ -159,7 +159,7 @@ class PitchShift(AudioTransform):
 
     def apply(self, y: np.ndarray, **params):
         n_steps = np.random.randint(-self.max_range, self.max_range)
-        augmented = librosa.effects.pitch_shift(y=y, self.sr, n_steps)
+        augmented = librosa.effects.pitch_shift(y=y, sr=self.sr, n_steps=n_steps)
         return augmented
 
 
